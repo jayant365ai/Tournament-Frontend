@@ -4,6 +4,7 @@ import "./App.css";
 import Bracket from "./Pages/Bracket";
 import Home from "./Pages/Home";
 import Tournament from "./Pages/Tournament";
+import ChessMatch from "./Pages/ChessMatch";
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
       <Routes>
         <Route path="/tournament/:TID" element={<Tournament />}></Route>
         <Route path="/bracket/:TID" element={<Bracket />}></Route>
+        <Route path="/ChessMatch/:MID" element={<ChessMatch />}></Route>
         <Route path="/" element={<Home />}></Route>
       </Routes>
     </Router>
