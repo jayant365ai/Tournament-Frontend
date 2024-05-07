@@ -29,7 +29,7 @@ const Tournament = () => {
         console.log(response.data.data);
         setTeamList(response.data.data);
         const teamdataString = JSON.stringify(response.data.data);
-        sessionStorage.setItem('teamData', teamdataString);
+        sessionStorage.setItem("teamData", teamdataString);
       })
       .catch((error) => {
         console.log(error);
@@ -124,12 +124,12 @@ const Tournament = () => {
         console.log(response);
         let transformedMatches = response.data.map((match) => {
           const scores = match.score.split("-").map((score) => parseInt(score));
-            const findteam1 = teamList.find((teamItem) => {
-                return match.team1Id === teamItem.id;
-            })
-            const findteam2 = teamList.find((teamItem) => {
-                return match.team2Id === teamItem.id;
-            })
+          const findteam1 = teamList.find((teamItem) => {
+            return match.team1Id === teamItem.id;
+          });
+          const findteam2 = teamList.find((teamItem) => {
+            return match.team2Id === teamItem.id;
+          });
           return {
             id: match._id,
             nextMatchId: match.nextMatchID,
@@ -223,6 +223,13 @@ const Tournament = () => {
     getAllTeamData();
     getOpenMatch();
   }, []);
+
+  const handleClick = (item) => {
+    console.log("clicked", item);
+    sessionStorage.setItem("matchInfo", JSON.stringify(item));
+    const { id } = item;
+    navigate(`/ChessMatch/${id}`);
+  };
   return (
     <div className="min-w-[100%] min-h-[90vh] py-4 px-10 flex flex-col gap-2">
       <h1 className="text-4xl font-bold text-white">Teams</h1>
@@ -299,8 +306,11 @@ const Tournament = () => {
       )}
       <div className="text-4xl font-bold text-white flex flex-row gap-2 items-center">
         Matches{" "}
-        <button className="bg-black text-sm ml-2 py-2 px-6"
-        onClick={() => {navigate(`/bracket/${TID}`)}}
+        <button
+          className="bg-black text-sm ml-2 py-2 px-6"
+          onClick={() => {
+            navigate(`/bracket/${TID}`);
+          }}
         >
           OPEN BRACKET
         </button>
@@ -311,6 +321,7 @@ const Tournament = () => {
             <div
               className="flex flex-col gap-2 transition duration-300 ease border-white border-[1px] px-3 py-2 cursor-pointer hover:scale-[1.01]"
               key={item.id}
+              onClick={() => handleClick(item)}
             >
               <form
                 className="flex flex-col gap-2"
