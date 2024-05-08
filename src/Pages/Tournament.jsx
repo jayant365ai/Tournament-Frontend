@@ -8,12 +8,15 @@ const Tournament = () => {
   const [teamList, setTeamList] = useState([]);
   const [matchList, setMatchList] = useState([]);
   const [tourData, setTourData] = useState(() => JSON.parse(storedData));
-  const [teamName, setTeamName] = useState("");
+  const [teamName, setTeamName] = useState([]);
   const [teamSeed, setTeamSeed] = useState("");
+  const [seed, setSeed] = useState("1");
   const [isLoading, setIsLoading] = useState(false);
   const [team1Score, setTeam1Score] = useState("");
   const [team2Score, setTeam2Score] = useState("");
   const [selectedTeam, setSelectedTeam] = useState({});
+  const [numTeamInputs, setNumTeamInputs] = useState(1);
+
   const { TID } = useParams();
 
   const getAllTeamData = () => {
@@ -26,10 +29,13 @@ const Tournament = () => {
     axios
       .request(config)
       .then((response) => {
-        console.log(response.data.data);
+        console.log("resss", response.data.data);
         setTeamList(response.data.data);
         const teamdataString = JSON.stringify(response.data.data);
         sessionStorage.setItem("teamData", teamdataString);
+        const len = response.data.data.length;
+        const currSeed = response.data.data[len - 1].seed;
+        setSeed(currSeed + 1);
       })
       .catch((error) => {
         console.log(error);
@@ -38,21 +44,29 @@ const Tournament = () => {
 
   const addTeam = (e) => {
     e.preventDefault();
-    if (!teamName || !teamSeed) {
+    console.log("asdteam", teamName);
+    let teamSeed = [];
+    for (let i = 0, j = seed; i < teamName.length; i++, j++) {
+      teamSeed.push(j);
+      setSeed(j + 1);
+    }
+    console.log("arr", teamSeed);
+    if (!teamName) {
       alert("Enter Name and Seed");
       return;
     }
-    let seedInt = parseInt(teamSeed);
-    if (teamList.length) {
-      const found = teamList.find((team) => {
-        return team.seed === seedInt; // Include a return statement
-      });
-      if (found || seedInt < 1) {
-        alert("Seed already exist or smaller than 1");
-        return;
-      }
-    }
+    // let seedInt = parseInt(seed);
+    // if (teamList.length) {
+    //   const found = teamList.find((team) => {
+    //     return team.seed === seedInt; // Include a return statement
+    //   });
+    //   if (found || seedInt < 1) {
+    //     alert("Seed already exist or smaller than 1");
+    //     return;
+    //   }
+    // }
     setIsLoading(true);
+    // const teamSeed = seed.toString();
     let data = JSON.stringify({
       TID,
       participant: {
@@ -230,6 +244,13 @@ const Tournament = () => {
     const { id } = item;
     navigate(`/ChessMatch/${id}`);
   };
+
+  const handleAddMoreClick = (e) => {
+    e.preventDefault();
+    console.log("adas");
+    setNumTeamInputs((prevNum) => prevNum + 1);
+  };
+
   return (
     <div className="min-w-[100%] min-h-[90vh] py-4 px-10 flex flex-col gap-2">
       <h1 className="text-4xl font-bold text-white">Teams</h1>
@@ -244,8 +265,8 @@ const Tournament = () => {
             </div>
           ))}
       </div>
-      {tourData.state !== "underway" && (
-        <div>
+      {Array.from({ length: numTeamInputs }).map((_, index) => (
+        <div key={index}>
           <form
             className="flex flex-row items-center"
             onSubmit={(e) => addTeam(e)}
@@ -255,39 +276,34 @@ const Tournament = () => {
                 className="text-white bg-transparent border-white border-r-[1px]"
                 type="text"
                 name="teamName"
-                value={teamName}
+                value={teamName[index]}
                 minLength={3}
                 required={true}
                 onChange={(e) => {
                   console.log(e.currentTarget.value);
-                  setTeamName(e.currentTarget.value);
+                  const newData = [...teamName];
+                  newData[index] = e.currentTarget.value;
+                  setTeamName(newData);
                 }}
               />
             </div>
-            <div className="bg-black py-2 pl-4">
-              <input
-                className="text-white bg-transparent border-white border-r-[1px]"
-                type="text"
-                name="teamSeed"
-                value={teamSeed}
-                minLength={1}
-                required={true}
-                onChange={(e) => {
-                  console.log(e.currentTarget.value);
-                  setTeamSeed(e.currentTarget.value);
-                }}
-              />
-            </div>
+
+            <button
+              className="bg-black text-white py-2 px-6"
+              onClick={handleAddMoreClick}
+            >
+              Add more
+            </button>
             <button
               className="bg-black text-white py-2 px-6"
               type="submit"
               disabled={isLoading}
             >
-              {isLoading ? "Loading" : "ADD"}
+              {isLoading ? "Loading" : "Submit"}
             </button>
           </form>
         </div>
-      )}
+      ))}
       {tourData.state === "pending" && (
         <div className="flex flex-row">
           <div className=" flex flex-row bg-black py-2 pl-4 w-fit">
