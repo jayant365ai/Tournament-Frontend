@@ -5,6 +5,8 @@ import Bracket from "./Pages/Bracket";
 import Home from "./Pages/Home";
 import Tournament from "./Pages/Tournament";
 import ChessMatch from "./Pages/ChessMatch";
+import RegisterUser from "./Pages/RegisterUser";
+import Match from "./Pages/Match";
 
 function App() {
   return (
@@ -17,6 +19,8 @@ function App() {
         <Route path="/bracket/:TID" element={<Bracket />}></Route>
         <Route path="/ChessMatch/:MID" element={<ChessMatch />}></Route>
         <Route path="/" element={<Home />}></Route>
+        <Route path="/user" element={<RegisterUser />}></Route>
+        <Route path="/match" element={<Match />}></Route>
       </Routes>
     </Router>
   );
