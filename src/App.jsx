@@ -18,8 +18,8 @@ function App() {
         <Route path="/tournament/:TID" element={<Tournament />}></Route>
         <Route path="/bracket/:TID" element={<Bracket />}></Route>
         <Route path="/ChessMatch/:MID" element={<ChessMatch />}></Route>
-        <Route path="/" element={<Home />}></Route>
-        <Route path="/user" element={<RegisterUser />}></Route>
+        <Route path="/trnhome" element={<Home />}></Route>
+        <Route path="/" element={<RegisterUser />}></Route>
         <Route path="/match" element={<Match />}></Route>
       </Routes>
     </Router>
