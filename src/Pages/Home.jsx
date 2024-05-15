@@ -12,7 +12,7 @@ const Home = () => {
     let config = {
       method: "get",
       maxBodyLength: Infinity,
-      url: "http://localhost:5000/api/brackets/getAllTours",
+      url: `${import.meta.env.VITE_REACT_APP_SERVER}api/brackets/getAllTours`,
     };
 
     axios
@@ -40,7 +40,7 @@ const Home = () => {
     let config = {
       method: "post",
       maxBodyLength: Infinity,
-      url: "http://localhost:5000/api/brackets/create",
+      url: `${import.meta.env.VITE_REACT_APP_SERVER}api/brackets/create`,
       headers: {
         "Content-Type": "application/json",
       },
