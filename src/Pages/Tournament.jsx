@@ -23,7 +23,7 @@ const Tournament = () => {
     let config = {
       method: "get",
       maxBodyLength: Infinity,
-      url: `http://localhost:5000/api/players/getAll?TID=${TID}`,
+      url: `${import.meta.env.VITE_REACT_APP_SERVER}api/players/getAll?TID=${TID}`,
     };
 
     axios
@@ -78,7 +78,7 @@ const Tournament = () => {
     let config = {
       method: "post",
       maxBodyLength: Infinity,
-      url: "http://localhost:5000/api/players/addPlayer",
+      url: `${import.meta.env.VITE_REACT_APP_SERVER}/api/players/addPlayer`,
       headers: {
         "Content-Type": "application/json",
       },
@@ -107,7 +107,7 @@ const Tournament = () => {
     let config = {
       method: "post",
       maxBodyLength: Infinity,
-      url: "http://localhost:5000/api/brackets/start",
+      url: `${import.meta.env.VITE_REACT_APP_SERVER}api/brackets/start`,
       headers: {
         "Content-Type": "application/json",
       },
@@ -129,7 +129,7 @@ const Tournament = () => {
     let config = {
       method: "get",
       maxBodyLength: Infinity,
-      url: `http://localhost:5000/api/brackets/getAllBrkt?TID=${TID}`,
+      url: `${import.meta.env.VITE_REACT_APP_SERVER}api/brackets/getAllBrkt?TID=${TID}`,
     };
 
     axios
@@ -212,7 +212,7 @@ const Tournament = () => {
     let config = {
       method: "post",
       maxBodyLength: Infinity,
-      url: "http://localhost:5000/api/matches/updateScore",
+      url: `${import.meta.env.VITE_REACT_APP_SERVER}api/matches/updateScore`,
       headers: {
         "Content-Type": "application/json",
       },
@@ -243,6 +243,36 @@ const Tournament = () => {
     sessionStorage.setItem("matchInfo", JSON.stringify(item));
     const { id } = item;
     navigate(`/ChessMatch/${id}`);
+  };
+
+  const startMatch = (item) => {
+    const MID = item.id;   
+    let data = JSON.stringify({
+      "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+      "MID": MID,
+      "currTurn": "w",
+      "TID": TID,
+      "P1ID": item?.participants[0]?.id,
+      "P2ID": item?.participants[1]?.id,
+    });
+    
+    let config = {
+      method: 'post',
+      maxBodyLength: Infinity,
+      url: `${import.meta.env.VITE_REACT_APP_MSERVER}/api/chess/trigger`,
+      headers: { 
+        'Content-Type': 'application/json'
+      },
+      data : data
+    };
+    
+    axios.request(config)
+    .then((response) => {
+      console.log(JSON.parse(response.data));
+    })
+    .catch((error) => {
+      console.log(error);
+    });
   };
 
   const handleAddMoreClick = (e) => {
@@ -337,7 +367,6 @@ const Tournament = () => {
             <div
               className="flex flex-col gap-2 transition duration-300 ease border-white border-[1px] px-3 py-2 cursor-pointer hover:scale-[1.01]"
               key={item.id}
-              onClick={() => handleClick(item)}
             >
               <form
                 className="flex flex-col gap-2"
@@ -346,7 +375,7 @@ const Tournament = () => {
                   submitScore(e);
                 }}
               >
-                <div>
+                <div className="flex flex-row">
                   MatchID : {item.id} || State: {item.state} || Round:{" "}
                   {item.roundNumber} || WinnerNextMatch: {item.nextMatchId} ||
                   {item.state === "complete" ? (
@@ -356,14 +385,18 @@ const Tournament = () => {
                       "Winner: " + item.participants[1].name
                     )
                   ) : (
-                    <button
-                      type="submit"
-                      className="bg-black text-white mx-1 px-6"
-                      disabled={isLoading}
-                    >
-                      Submit Score
-                    </button>
+                    <div className="flex flex-row">
+                      <button
+                        type="submit"
+                        className="bg-black text-white mx-1 px-6"
+                        disabled={isLoading}
+                      >
+                        Submit Score
+                      </button>
+                      <div className="bg-black text-white mx-1 px-6" onClick={() => startMatch(item)}>Start Match</div>
+                    </div>
                   )}
+                  <div className="bg-black text-white mx-1 px-6" onClick={() => handleClick(item)}>Spectate</div>
                 </div>
                 <div>
                   Team1ID : {item?.participants[0]?.id} || Name:{" "}

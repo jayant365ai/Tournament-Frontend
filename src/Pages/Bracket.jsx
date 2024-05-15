@@ -49,7 +49,7 @@ const Bracket = () => {
     let config = {
       method: "get",
       maxBodyLength: Infinity,
-      url: `http://localhost:5000/api/brackets/getAllBrkt?TID=${TID}`,
+      url: `${import.meta.env.VITE_REACT_APP_SERVER}api/brackets/getAllBrkt?TID=${TID}`,
     };
 
     axios
