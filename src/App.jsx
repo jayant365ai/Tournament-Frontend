@@ -11,9 +11,6 @@ import Match from "./Pages/Match";
 function App() {
   return (
     <Router>
-      <div className="flex flex-row gap-4 min-w-full px-4 text-white">
-        <Link to="/">Home</Link>
-      </div>
       <Routes>
         <Route path="/tournament/:TID" element={<Tournament />}></Route>
         <Route path="/bracket/:TID" element={<Bracket />}></Route>
