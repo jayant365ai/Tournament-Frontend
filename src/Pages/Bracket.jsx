@@ -72,14 +72,14 @@ const Bracket = () => {
             participants: [
               {
                 id: match.team1Id,
-                resultText: scores[0] ? scores[0] : "TBH",
+                resultText: `${scores[0] || scores[0] === 0 ? scores[0] : "TBH"}`,
                 isWinner: match.team1Id === match.winner,
                 status: null,
                 name: match.team1Id ? findteam1?.name : " - ",
               },
               {
                 id: match.team2Id,
-                resultText: scores[1] ? scores[1] : "TBH",
+                resultText: `${scores[1] || scores[1] === 0 ? scores[1] : "TBH"}`,
                 isWinner: match.team2Id === match.winner,
                 status: null,
                 name: match.team2Id ? findteam2?.name : " - ",
