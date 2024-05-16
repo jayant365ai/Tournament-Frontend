@@ -5,6 +5,14 @@ import axios from "axios";
 import HighchartsReact from "highcharts-react-official";
 import Highcharts from "highcharts";
 import { useNavigate, useParams } from "react-router-dom";
+import {
+  FaChessPawn,
+  FaChessRook,
+  FaChessBishop,
+  FaChessKnight,
+  FaChessKing,
+  FaChessQueen,
+} from "react-icons/fa";
 
 const Match = () => {
   const navigate = useNavigate();
@@ -27,14 +35,14 @@ const Match = () => {
   const [matchList, setMatchList] = useState([]);
   const [teamList, setTeamList] = useState([]);
   const [MID, setMID] = useState("");
-  const [currMatch, setCurrMatch] = useState({});
-  const [nextMatch, setNextMatch] = useState({});
+  const [currMatch, setCurrMatch] = useState();
+  const [nextMatch, setNextMatch] = useState();
   const TID = "14547936";
 
   const [whitePieceCounts, setWhitePieceCounts] = useState({});
   const [blackPieceCounts, setBlackPieceCounts] = useState({});
-  const [whiteWinProbability, setWhiteWinProbability] = useState(0);
-  const [blackWinProbability, setBlackWinProbability] = useState(0);
+  const [whiteWinProbability, setWhiteWinProbability] = useState(50);
+  const [blackWinProbability, setBlackWinProbability] = useState(50);
   const [restMatch, setRestMatch] = useState(false);
 
   const findPieceInfo = (fenValue) => {
@@ -95,6 +103,7 @@ const Match = () => {
   }, [fen]);
 
   useEffect(() => {
+    console.log(blackWinProbability, "hjda");
     const totalWhitePieces =
       whitePieceCounts.pawn +
       whitePieceCounts.rook +
@@ -116,11 +125,15 @@ const Match = () => {
     console.log("white win", whiteWinProbability);
     console.log("black win", blackWinProbability);
     if (totalPieces > 0) {
-      setWhiteWinProbability((totalWhitePieces / totalPieces) * 100);
-      setBlackWinProbability((totalBlackPieces / totalPieces) * 100);
+      setWhiteWinProbability(
+        Math.floor((totalWhitePieces / totalPieces) * 100)
+      );
+      setBlackWinProbability(
+        Math.floor((totalBlackPieces / totalPieces) * 100)
+      );
     } else {
-      setWhiteWinProbability(0);
-      setBlackWinProbability(0);
+      setWhiteWinProbability(50);
+      setBlackWinProbability(50);
     }
   }, [whitePieceCounts, blackPieceCounts]);
 
@@ -257,24 +270,27 @@ const Match = () => {
     try {
       console.log(game.turn());
       console.log(restMatch);
-      const response = await fetch(`${import.meta.env.VITE_REACT_APP_SERVER}api/chess/move`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          fen: game.fen(),
-          turn: game.turn(),
-          MID,
-          MVN: moveNum,
-          resetMatch,
-        }),
-      });
+      const response = await fetch(
+        `${import.meta.env.VITE_REACT_APP_SERVER}api/chess/move`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            fen: game.fen(),
+            turn: game.turn(),
+            MID,
+            MVN: moveNum,
+            resetMatch,
+          }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Network response was not ok.");
       }
-  
+
       const data = await response.json();
       console.log(data);
       if (data.message === "White wins") {
@@ -365,8 +381,8 @@ const Match = () => {
   }, [matchResult, MID]);
 
   return (
-    <div className="flex flex-row w-full h-[90vh] px-4 gap-4">
-      <div className="flex flex-col">
+    <div className="flex flex-row w-full h-[100vh] p-4 gap-4">
+      <div className="flex flex-col gap-2">
         <Chessboard
           width={400}
           position={fen}
@@ -382,11 +398,129 @@ const Match = () => {
             }
           }}
         />
-        <div className="text-white text-4xl flex flex-row w-full items-center justify-center py-10">
-          {matchResult}
-        </div>
+        {!matchResult && currMatch ? (
+          <div className="w-full h-full px-2 pb-2 border-s-2">
+            <div className="w-full h-full flex flex-col items-start justify-between">
+              <div className="text-sm text-white items-center w-full flex flex-row justify-center">Winning Probability</div>
+              <div className="w-full flex flex-col items-start justify-center gap-1">
+                <div className="text-white text-sm font-semibold">
+                  {findParticipantName(currMatch?.participants[0]?.id)}
+                </div>
+                <div
+                  className="text-sm font-bold flex flex-row pr-2 items-center justify-end bg-white h-[40px] border-2 border-black transition-all duration-1000 cursor-pointer"
+                  style={{ width: `${whiteWinProbability}%` }}
+                >
+                  {whiteWinProbability + "%"}
+                </div>
+                <div className="py-[1px] bg-black text-white flex-row flex jusity-center items-center">
+                  {whitePieceCounts.pawn
+                    ? Array.from(
+                        { length: whitePieceCounts.pawn },
+                        (_, index) => <FaChessPawn key={`pawn-${index}`} />
+                      )
+                    : ""}
+                  {whitePieceCounts.rook
+                    ? Array.from(
+                        { length: whitePieceCounts.rook },
+                        (_, index) => <FaChessRook key={`rook-${index}`} />
+                      )
+                    : ""}
+                  {whitePieceCounts.knight
+                    ? Array.from(
+                        { length: whitePieceCounts.knight },
+                        (_, index) => <FaChessKnight key={`knight-${index}`} />
+                      )
+                    : ""}
+                  {whitePieceCounts.bishop
+                    ? Array.from(
+                        { length: whitePieceCounts.bishop },
+                        (_, index) => <FaChessBishop key={`bishop-${index}`} />
+                      )
+                    : ""}
+                  {whitePieceCounts.queen
+                    ? Array.from(
+                        { length: whitePieceCounts.queen },
+                        (_, index) => <FaChessQueen key={`queen-${index}`} />
+                      )
+                    : ""}
+                  {whitePieceCounts.king
+                    ? Array.from(
+                        { length: whitePieceCounts.king },
+                        (_, index) => <FaChessKing key={`king-${index}`} />
+                      )
+                    : ""}
+                </div>
+              </div>
+              <div className="w-full flex flex-col items-start justify-center gap-2">
+                <div className="text-white text-sm font-semibold">
+                  {findParticipantName(currMatch.participants[1].id)}
+                </div>
+                <div
+                  className="text-sm font-bold flex flex-row pr-2 items-center justify-end text-white bg-black h-[40px] border-2 border-white transition-all duration-1000 cursor-pointer"
+                  style={{ width: `${blackWinProbability}%` }}
+                >
+                  {blackWinProbability + "%"}
+                </div>
+                <div className="py-[1px] text-black bg-white flex-row flex jusity-center items-center">
+                  {blackPieceCounts.pawn
+                    ? Array.from(
+                        { length: blackPieceCounts.pawn },
+                        (_, index) => (
+                          <FaChessPawn key={`pawn-black-${index}`} />
+                        )
+                      )
+                    : ""}
+                  {blackPieceCounts.rook
+                    ? Array.from(
+                        { length: blackPieceCounts.rook },
+                        (_, index) => (
+                          <FaChessRook key={`rook-black-${index}`} />
+                        )
+                      )
+                    : ""}
+                  {blackPieceCounts.knight
+                    ? Array.from(
+                        { length: blackPieceCounts.knight },
+                        (_, index) => (
+                          <FaChessKnight key={`knight-black-${index}`} />
+                        )
+                      )
+                    : ""}
+                  {blackPieceCounts.bishop
+                    ? Array.from(
+                        { length: blackPieceCounts.bishop },
+                        (_, index) => (
+                          <FaChessBishop key={`bishop-black-${index}`} />
+                        )
+                      )
+                    : ""}
+                  {blackPieceCounts.queen
+                    ? Array.from(
+                        { length: blackPieceCounts.queen },
+                        (_, index) => (
+                          <FaChessQueen key={`queen-black-${index}`} />
+                        )
+                      )
+                    : ""}
+                  {blackPieceCounts.king
+                    ? Array.from(
+                        { length: blackPieceCounts.king },
+                        (_, index) => (
+                          <FaChessKing key={`king-black-${index}`} />
+                        )
+                      )
+                    : ""}
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="text-white text-4xl flex flex-row w-full items-center justify-center py-10">
+            {matchResult}
+          </div>
+        )}
       </div>
-      <div className="flex flex-col gap-10">
+      {/* <div className="flex flex-col gap-10">
         <div className="flex flex-row text-white w-[300px] justify-between">
           <div className="w-[50%]">
             White Pieces:
@@ -412,7 +546,7 @@ const Match = () => {
         <div>
           <HighchartsReact highcharts={Highcharts} options={options} />
         </div>
-      </div>
+      </div> */}
       {MID && currMatch && (
         <div className="flex flex-col text-white w-[100%]">
           {/* <div className="flex flex-row px-60">{matchResult}</div> */}
@@ -429,8 +563,12 @@ const Match = () => {
             </div>
           </div>
           <div className="flex flex-row">
-            <div className="w-[50%]">Moves: {whiteMV} {lastTurn === "white" && "|| " + lastMV}</div>
-            <div className="w-[50%]">Moves: {blackMV} {lastTurn === "black" && "|| " + lastMV}</div>
+            <div className="w-[50%]">
+              Moves: {whiteMV} {lastTurn === "white" && "|| " + lastMV}
+            </div>
+            <div className="w-[50%]">
+              Moves: {blackMV} {lastTurn === "black" && "|| " + lastMV}
+            </div>
           </div>
           <div className="flex flex-row h-[80%] overflow-y-auto items-start w-full">
             {!mVList.length && (
@@ -469,7 +607,10 @@ const Match = () => {
             <div className="flex gap-2 flex-col w-[40%]">
               <div
                 className="hover:scale-[1.02] cursor-pointer flex-col flex border-2 border-white-500 mx-2 w-full px-8 py-2 items-center justify-center"
-                onClick={() => {makeAutoMove(true); setMatchResult("");}}
+                onClick={() => {
+                  makeAutoMove(true);
+                  setMatchResult("");
+                }}
               >
                 Restart Match
               </div>
