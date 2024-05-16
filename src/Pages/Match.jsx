@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import Chessboard from "chessboardjsx";
 import { Chess } from "chess.js";
 import axios from "axios";
+import HighchartsReact from "highcharts-react-official";
+import Highcharts from "highcharts";
 import { useNavigate, useParams } from "react-router-dom";
 
 const Match = () => {
@@ -28,6 +30,121 @@ const Match = () => {
   const [currMatch, setCurrMatch] = useState({});
   const [nextMatch, setNextMatch] = useState({});
   const TID = "14547936";
+
+  const [whitePieceCounts, setWhitePieceCounts] = useState({});
+  const [blackPieceCounts, setBlackPieceCounts] = useState({});
+  const [whiteWinProbability, setWhiteWinProbability] = useState(0);
+  const [blackWinProbability, setBlackWinProbability] = useState(0);
+  const [restMatch, setRestMatch] = useState(false);
+
+  const findPieceInfo = (fenValue) => {
+    const [pieces, turn, castling, enPassant, halfMove, fullMove] =
+      fenValue.split(" ");
+    const pieceCounts = {
+      white: {
+        pawn: 0,
+        rook: 0,
+        knight: 0,
+        bishop: 0,
+        queen: 0,
+        king: 0,
+      },
+      black: {
+        pawn: 0,
+        rook: 0,
+        knight: 0,
+        bishop: 0,
+        queen: 0,
+        king: 0,
+      },
+    };
+
+    pieces.split("/").forEach((row, rowIndex) => {
+      let fileIndex = 0;
+      for (let i = 0; i < row.length; i++) {
+        if (!isNaN(row[i])) {
+          fileIndex += parseInt(row[i]);
+        } else {
+          const color = row[i] === row[i].toLowerCase() ? "black" : "white";
+          const pieceName = {
+            p: "pawn",
+            r: "rook",
+            n: "knight",
+            b: "bishop",
+            q: "queen",
+            k: "king",
+          }[row[i].toLowerCase()];
+          if (!pieceCounts[color][pieceName]) {
+            pieceCounts[color][pieceName] = 1;
+          } else {
+            pieceCounts[color][pieceName]++;
+          }
+          fileIndex++;
+        }
+      }
+    });
+
+    setWhitePieceCounts(pieceCounts.white);
+    setBlackPieceCounts(pieceCounts.black);
+  };
+
+  useEffect(() => {
+    if (fen !== "start") {
+      findPieceInfo(fen);
+    }
+  }, [fen]);
+
+  useEffect(() => {
+    const totalWhitePieces =
+      whitePieceCounts.pawn +
+      whitePieceCounts.rook +
+      whitePieceCounts.knight +
+      whitePieceCounts.bishop +
+      whitePieceCounts.queen +
+      whitePieceCounts.king;
+
+    const totalBlackPieces =
+      blackPieceCounts.pawn +
+      blackPieceCounts.rook +
+      blackPieceCounts.knight +
+      blackPieceCounts.bishop +
+      blackPieceCounts.queen +
+      blackPieceCounts.king;
+
+    const totalPieces = totalWhitePieces + totalBlackPieces;
+    console.log("tpta;", totalPieces);
+    console.log("white win", whiteWinProbability);
+    console.log("black win", blackWinProbability);
+    if (totalPieces > 0) {
+      setWhiteWinProbability((totalWhitePieces / totalPieces) * 100);
+      setBlackWinProbability((totalBlackPieces / totalPieces) * 100);
+    } else {
+      setWhiteWinProbability(0);
+      setBlackWinProbability(0);
+    }
+  }, [whitePieceCounts, blackPieceCounts]);
+
+  const options = {
+    chart: {
+      type: "bar",
+    },
+    title: {
+      text: "Player Win Probability Comparison",
+    },
+    xAxis: {
+      categories: ["White", "Black"],
+    },
+    yAxis: {
+      title: {
+        text: "Win Probability (%)",
+      },
+    },
+    series: [
+      {
+        data: [whiteWinProbability, blackWinProbability],
+      },
+    ],
+  };
 
   const findParticipantName = (id) => {
     for (let i = 0; i < teamList.length; i++) {
@@ -107,9 +224,22 @@ const Match = () => {
         let filteredMatches = transformedMatches.filter(
           (match) => match.state !== "pending"
         );
-        setCurrMatch(filteredMatches[0]);
-        setNextMatch(filteredMatches[1]);
-        setMID(filteredMatches[0].id);
+        let firstOpenIndex = filteredMatches.findIndex(
+          (match) => match.state === "open"
+        );
+        if (firstOpenIndex === 0) {
+          setCurrMatch(filteredMatches[0]);
+          setNextMatch(filteredMatches[1]);
+          setMID(filteredMatches[0].id);
+        } else if (firstOpenIndex === -1) {
+          setCurrMatch(filteredMatches[filteredMatches.length - 1]);
+          setNextMatch([]);
+          setMID(filteredMatches[filteredMatches.length - 1].id);
+        } else {
+          setCurrMatch(filteredMatches[firstOpenIndex - 1]);
+          setNextMatch(filteredMatches[firstOpenIndex]);
+          setMID(filteredMatches[firstOpenIndex - 1].id);
+        }
         setMatchList(filteredMatches);
         console.log(filteredMatches);
       })
@@ -122,45 +252,45 @@ const Match = () => {
     getAllTeamData();
     getOpenMatch();
   }, []);
-
-  const makeAutoMove = async () => {
+  //${import.meta.env.VITE_REACT_APP_SERVER}
+  const makeAutoMove = async (resetMatch = false) => {
     try {
       console.log(game.turn());
-      const response = await fetch(
-        `${import.meta.env.VITE_REACT_APP_SERVER}api/chess/move`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            fen: game.fen(),
-            turn: game.turn(),
-            MID,
-            MVN: moveNum,
-          }),
-        }
-      );
+      console.log(restMatch);
+      const response = await fetch(`${import.meta.env.VITE_REACT_APP_SERVER}api/chess/move`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          fen: game.fen(),
+          turn: game.turn(),
+          MID,
+          MVN: moveNum,
+          resetMatch,
+        }),
+      });
 
       if (!response.ok) {
         throw new Error("Network response was not ok.");
       }
-
+  
       const data = await response.json();
       console.log(data);
       if (data.message === "White wins") {
         console.log(data.message);
         setMatchResult("White wins");
-        submitScore();
+        //submitScore();
       } else if (data.message === "Black wins") {
         console.log(data.message);
         setMatchResult("Black wins");
-        submitScore();
+        //submitScore();
       } else if (data.message === "Draw") {
         console.log(data.message);
         setMatchResult("Draw");
       } else if (data.success) {
         // Make sure the move is valid
+        findPieceInfo(data.fen);
         setMoveNum(moveNum + 1);
         setFen(data.fen);
         setBlackMV(data.blackMoves);
@@ -225,56 +355,89 @@ const Match = () => {
       return; // Return early to prevent setting up the timer
     }
     // Set up a timer to make automatic moves every 2 seconds
-    const timer = setInterval(() => {
-      if (MID) {
+    if (MID && MID !== "") {
+      const timer = setInterval(() => {
         makeAutoMove();
-      }
-    }, 1000);
-    return () => clearInterval(timer);
+      }, 1000);
+
+      return () => clearInterval(timer);
+    }
   }, [matchResult, MID]);
 
   return (
-    <div className="flex flex-row w-full h-[90vh] px-4 gap-10">
-      <Chessboard
-        width={400}
-        position={fen}
-        onDrop={(move) => {
-          const moveObj = {
-            from: move.sourceSquare,
-            to: move.targetSquare,
-            promotion: "q",
-          };
-          if (game.move(moveObj)) {
-            setFen(game.fen());
-            makeAutoMove(); // Optionally trigger another move after user's move
-          }
-        }}
-      />
+    <div className="flex flex-row w-full h-[90vh] px-4 gap-4">
+      <div className="flex flex-col">
+        <Chessboard
+          width={400}
+          position={fen}
+          onDrop={(move) => {
+            const moveObj = {
+              from: move.sourceSquare,
+              to: move.targetSquare,
+              promotion: "q",
+            };
+            if (game.move(moveObj)) {
+              setFen(game.fen());
+              makeAutoMove(); // Optionally trigger another move after user's move
+            }
+          }}
+        />
+        <div className="text-white text-4xl flex flex-row w-full items-center justify-center py-10">
+          {matchResult}
+        </div>
+      </div>
+      <div className="flex flex-col gap-10">
+        <div className="flex flex-row text-white w-[300px] justify-between">
+          <div className="w-[50%]">
+            White Pieces:
+            {["pawn", "rook", "knight", "bishop", "queen", "king"].map(
+              (pieceName) => (
+                <div key={pieceName}>
+                  {pieceName}: {whitePieceCounts[pieceName] || 0}
+                </div>
+              )
+            )}
+          </div>
+          <div className="w-[50%]">
+            Black Pieces:
+            {["pawn", "rook", "knight", "bishop", "queen", "king"].map(
+              (pieceName) => (
+                <div key={pieceName}>
+                  {pieceName}: {blackPieceCounts[pieceName] || 0}
+                </div>
+              )
+            )}
+          </div>
+        </div>
+        <div>
+          <HighchartsReact highcharts={Highcharts} options={options} />
+        </div>
+      </div>
       {MID && currMatch && (
         <div className="flex flex-col text-white w-[100%]">
-          <div className="flex flex-row px-60">{matchResult}</div>
+          {/* <div className="flex flex-row px-60">{matchResult}</div> */}
           <div className="flex flex-row text-xl font-bold">
             <div className="w-[50%]">
               White{" "}
               {"(" + findParticipantName(currMatch.participants[0].id) + ")"}{" "}
-              {lastTurn === "white" && "{==  " + lastMV}
+              {/* {lastTurn === "white" && "{==  " + lastMV} */}
             </div>
             <div className="w-[50%]">
               Black{" "}
               {"(" + findParticipantName(currMatch.participants[1].id) + ")"}{" "}
-              {lastTurn === "black" && "{==  " + lastMV}
+              {/* {lastTurn === "black" && "{==  " + lastMV} */}
             </div>
           </div>
           <div className="flex flex-row">
-            <div className="w-[50%]">Moves: {whiteMV}</div>
-            <div className="w-[50%]">Moves: {blackMV}</div>
+            <div className="w-[50%]">Moves: {whiteMV} {lastTurn === "white" && "|| " + lastMV}</div>
+            <div className="w-[50%]">Moves: {blackMV} {lastTurn === "black" && "|| " + lastMV}</div>
           </div>
           <div className="flex flex-row h-[80%] overflow-y-auto items-start w-full">
-            {!mVList.length && 
-            <div className="w-full text-xl font-bold flex flex-row py-4">
-              Match will start soon.
-            </div>
-            }
+            {!mVList.length && (
+              <div className="w-full text-xl font-bold flex flex-row py-4">
+                Match will start soon.
+              </div>
+            )}
             <div className="w-[50%] flex flex-col-reverse pl-6">
               {mVList.length > 0 &&
                 mVList.map(
@@ -291,7 +454,7 @@ const Match = () => {
             </div>
           </div>
           <div className="flex flex-row w-full py-2">
-            <div className="flex-col flex border-2 border-white-500 mx-2 w-fit px-4 py-2">
+            <div className="flex-col flex border-2 border-white-500 mx-2 w-[60%] py-2 px-2">
               <div>Next Match: (In next 2 Days)</div>
               <div>
                 White{" "}
@@ -303,7 +466,20 @@ const Match = () => {
                 {"(" + findParticipantName(nextMatch.participants[1].id) + ")"}
               </div>
             </div>
-            <div className="hover:scale-[1.02] cursor-pointer flex-col flex border-2 border-white-500 mx-2 w-fit px-10 py-2 items-center justify-center" onClick={() => navigate(`/bracket/${TID}`)}> Open Bracket </div>
+            <div className="flex gap-2 flex-col w-[40%]">
+              <div
+                className="hover:scale-[1.02] cursor-pointer flex-col flex border-2 border-white-500 mx-2 w-full px-8 py-2 items-center justify-center"
+                onClick={() => {makeAutoMove(true); setMatchResult("");}}
+              >
+                Restart Match
+              </div>
+              <div
+                className="hover:scale-[1.02] cursor-pointer flex-col flex border-2 border-white-500 mx-2 w-full px-8 py-2 items-center justify-center"
+                onClick={() => navigate(`/bracket/${TID}`)}
+              >
+                Open Bracket
+              </div>
+            </div>
           </div>
         </div>
       )}

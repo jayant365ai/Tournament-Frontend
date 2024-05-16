@@ -62,15 +62,15 @@ const RegisterUser = () => {
   };
 
   return (
-    <>
-      <div className="text-white h-[100vh] flex  justify-center flex-col">
-        <h1 className="text-center text-[2rem]">User details</h1>
+    <div className="flex flex-row w-[100vw]">
+      <div className="text-white h-[95vh] flex w-[50%]  justify-center flex-col">
+        <h1 className="text-center text-[2rem] mb-8">Register For Matches</h1>
         <form
           onSubmit={handleSubmit}
           className="flex flex-col items-center justify-center gap-4"
         >
-          <div className="text-black w-[80%] md:w-[30%]">
-            <p className="text-white font-medium text-[2rem]">Name</p>
+          <div className="text-black w-[80%] md:w-[50%]">
+            <p className="text-white font-medium text-[1rem]">Name</p>
             <input
               type="text"
               name="userName"
@@ -80,8 +80,8 @@ const RegisterUser = () => {
               className="w-full p-2"
             />
           </div>
-          <div className="text-black w-[80%] md:w-[30%] ">
-            <p className="text-white text-[2rem]">Email</p>
+          <div className="text-black w-[80%] md:w-[50%] ">
+            <p className="text-white text-[1rem]">Email</p>
             <input
               type="email"
               name="emailId"
@@ -94,8 +94,8 @@ const RegisterUser = () => {
             />
           </div>
           {showOtp && (
-            <div className="text-black w-[80%] md:w-[30%] ">
-              <p className="text-white text-[2rem]">OTP</p>
+            <div className="text-black w-[80%] md:w-[50%] ">
+              <p className="text-white text-[1rem]">OTP</p>
               <input
                 type="text"
                 name="otp"
@@ -111,7 +111,13 @@ const RegisterUser = () => {
           </button>
         </form>
       </div>
-    </>
+      <div className="text-white h-[95vh] flex w-[50%] items-center justify-center flex-col">
+        <div className="text-[2rem] mb-10">Speactate Current Matches</div>
+        <button onClick={() => navigate("/match")} className="border-2 px-4 py-2 rounded w-[20%]">
+            Go To Match
+          </button>
+      </div>
+    </div>
   );
 };
 
