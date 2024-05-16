@@ -118,7 +118,7 @@ const Tournament = () => {
       .request(config)
       .then((response) => {
         alert("Tournament Started");
-        navigate("/");
+        navigate("/trnhome");
       })
       .catch((error) => {
         console.log(error);
@@ -361,7 +361,7 @@ const Tournament = () => {
           OPEN BRACKET
         </button>
       </div>
-      <div className="text-white flex flex-col gap-2 ">
+      <div className="text-white flex flex-col gap-2">
         {matchList?.length &&
           matchList.map((item) => (
             <div
